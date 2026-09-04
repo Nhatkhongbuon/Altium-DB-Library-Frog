@@ -1,6 +1,6 @@
 # Altium DB Library Helper
 
-**Phiên bản 1.7.6** — Nhatnpm
+**Phiên bản 1.7.9** — Nhatnpm
 
 Tool chạy trên PC: nhập **part number** → chọn (hoặc để tool tự nhận diện) **loại linh kiện** → tra cứu Digi-Key / Mouser → điền đúng các trường của sheet tương ứng → ghi vào file Excel dùng làm database của Altium.
 
@@ -16,6 +16,8 @@ Từ **1.7.4**, mọi **bảng** trong tool đều **bôi đen và copy được
 Từ **1.7.5**: kéo thả đổi kích thước cửa sổ **mượt hẳn**, nút trên **thanh taskbar đeo đúng icon ếch / nhện** thay vì icon Python, **đóng gói được thành file `.exe`** chạy độc lập không cần cài Python, và **bản `.exe` tự cập nhật được** từ GitHub Release. Xem mục **1b**, **3m**, **3n**.
 
 Từ **1.7.6**: ô **Repo GitHub** trong Cấu hình bị **ẩn sau mật khẩu** — xem mục **3i**.
+
+Từ **1.7.8**: sửa lỗi *Security validation failure* khi tool tự mở lại sau cập nhật — xem mục **3n**.
 
 ---
 
@@ -920,6 +922,48 @@ công"*. Một bản cập nhật thất bại mà báo thành công là kiểu 
 mới rồi thoát tiến trình cũ. Bắt buộc phải mở lại: exe trên đĩa đã là bản mới nhưng
 tiến trình đang chạy vẫn là code cũ đã nạp vào bộ nhớ từ lúc mở.
 
+### Lỗi "Security validation failure" khi mở lại  *(sửa ở 1.7.8)*
+
+Từ 1.7.5 đến 1.7.7, cài xong bấm **Mở lại tool ngay** là gặp hộp thoại:
+
+> **Security validation failure: parent process has different executable!**
+
+Đây **không phải** lỗi cập nhật — file exe đã thay đúng rồi. Đây là **bootloader của
+PyInstaller** chặn tiến trình mới.
+
+Bản onefile chạy làm **hai** tiến trình: tiến trình người dùng bấm vào (*mức 0*)
+giải nén gói ra `%TEMP%\_MEIxxxx` rồi chạy lại **chính nó** một lần nữa thành tiến
+trình con (*mức 1*) — mã Python của tool chạy ở tiến trình con đó. Để con biết mình
+là con, cha đặt sẵn mấy biến môi trường:
+
+```
+_PYI_PARENT_PROCESS_LEVEL=1
+_PYI_ARCHIVE_FILE=...
+_PYI_APPLICATION_HOME_DIR=...
+```
+
+`subprocess.Popen` không truyền `env` thì tiến trình mới **thừa kế nguyên** môi
+trường đó. Bản exe mới vừa mở lên đọc thấy `LEVEL=1`, tưởng mình là tiến trình con
+của ai đó, bỏ qua bước giải nén, rồi làm một phép kiểm tra an toàn của PyInstaller
+6.x: *"file thực thi của tiến trình CHA có đúng là file của mình không?"*. Cha ở đây
+chính là tiến trình cũ của tool — mà file exe của nó **vừa bị đổi tên sang
+`_update_backup\`** ở bước thay file. Hai đường dẫn khác nhau → bootloader báo lỗi
+bảo mật và thoát.
+
+Nói cách khác: chính cái mẹo *đổi tên rồi thay chỗ* ở 1.7.5 đã kích hoạt phép kiểm
+tra này. Hai tính năng đúng riêng lẻ, ghép lại thì hỏng.
+
+Sửa: `updater.clean_child_env()` xoá mọi biến bắt đầu bằng `_PYI_` (và `_MEIPASS2`
+của PyInstaller 5.x trở về trước) khỏi môi trường trao cho tiến trình mới. Không còn
+biến nào thì exe mới khởi động từ đầu như bình thường — tự giải nén, tự sinh tiến
+trình con của chính nó, phép kiểm tra khớp.
+
+Kèm theo một thay đổi về cách xử sự: trước đây bấm *Mở lại* là tiến trình cũ thoát
+**ngay** sau `Popen`, nên bản mới chết lúc khởi động thì người dùng còn lại đúng một
+hộp thoại lỗi và không còn cửa sổ nào — tưởng tool hỏng hẳn. Nay cửa sổ cũ chỉ **ẩn
+đi**, đợi 2 giây rồi kiểm: bản mới chết là hiện lại và nói rõ chuyện gì xảy ra, kèm
+lối thoát (*Hoàn tác bản cập nhật cuối*).
+
 **Hoàn tác** vẫn dùng được: exe cũ nằm nguyên trong `_update_backup\<ngày_giờ>\`,
 bấm *"Hoàn tác bản cập nhật cuối"* là nó đổi chỗ ngược lại (cũng bằng phép đổi tên).
 Bản mới lỡ hỏng không mở lên được thì vào thẳng thư mục đó, chép file exe cũ đè
@@ -1109,5 +1153,3 @@ state_log.db        1.6 - nhật ký State (tự sinh)
 ```
 
 ---
-
-

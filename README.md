@@ -15,6 +15,8 @@ Từ **1.7.4**, mọi **bảng** trong tool đều **bôi đen và copy được
 
 Từ **1.7.5**: kéo thả đổi kích thước cửa sổ **mượt hẳn**, nút trên **thanh taskbar đeo đúng icon ếch / nhện** thay vì icon Python, **đóng gói được thành file `.exe`** chạy độc lập không cần cài Python, và **bản `.exe` tự cập nhật được** từ GitHub Release. Xem mục **1b**, **3m**, **3n**.
 
+Từ **1.7.6**: ô **Repo GitHub** trong Cấu hình bị **ẩn sau mật khẩu** — xem mục **3i**.
+
 ---
 
 ## 1. Cài đặt
@@ -564,6 +566,47 @@ Chọn file xong tool **soi file trước khi cài**: kiểm tra zip có hỏng 
 
 File `.zip` bạn chọn **không bị xoá** sau khi cài. Phần còn lại giống hệt cập nhật tự động: `config.json`, `rules.json`, `api_keys.enc`, cache và nhật ký giữ nguyên, bản cũ cất trong `_update_backup\` nên **Hoàn tác bản cập nhật cuối** vẫn dùng được.
 
+### Nguồn cập nhật bị ẩn, mở bằng mật khẩu  *(1.7.6)*
+
+Từ 1.7.6, hai ô **Repo GitHub** và **GitHub token** trong *Cấu hình → Cập nhật*
+không hiện sẵn nữa. Chỗ đó chỉ còn một dòng **🔒 Đã ẩn — cần mật khẩu để xem và
+sửa** kèm nút **Mở khoá...**; nhập đúng mật khẩu thì hai ô hiện ra như cũ, và có
+thêm nút **Ẩn lại**. Mở khoá **chỉ có hiệu lực tới khi đóng tool** — không ghi vào
+`config.json`, nên lần mở sau lại khoá như cũ.
+
+Lý do: hai ô này trỏ tới kho phát hành của tool. Sửa nhầm vào đây là tool im lặng
+không thấy bản mới nào nữa, mà lỗi thì không nhìn ra ngay.
+
+**Ẩn thật, không chỉ ẩn cái ô.** Khoá một ô nhập mà câu báo lỗi vẫn in nguyên
+đường dẫn ra thì khoá để làm gì. Nên khi đang khoá, tên repo được thay bằng
+`(đã ẩn)` ở **mọi chỗ nó có thể lọt ra**:
+
+- các câu lỗi của `check()` (404, token sai, chưa có Release…)
+- dòng ghi trong ô **Nhật ký**
+- **lỗi mạng của `requests`** — chỗ dễ sót nhất: nó ném kèm nguyên URL, kiểu
+  `Max retries exceeded with url: /repos/<owner>/<tên-repo>/releases/latest`.
+  Chỉ cần rút mạng rồi bấm *Kiểm tra ngay* là cả đường dẫn hiện ra trong hộp
+  thoại. Hàm `updater.scrub()` xoá cả ba dạng: `owner/tên`, `owner%2Ftên`
+  (URL-encode) và riêng phần `tên`.
+
+Nút **Kiểm tra ngay** và **Cập nhật từ file .zip...** vẫn dùng được bình thường
+khi đang khoá — chỉ có việc *xem và sửa địa chỉ* là cần mật khẩu.
+
+> **Đây là cái chốt cửa, không phải ổ khoá.** Mật khẩu nằm trong chính chương
+> trình, nên ai quyết tâm vẫn lấy ra được — đọc mã nguồn, hoặc giải nén file
+> `.exe` rồi đọc `.pyc`. Cất ở dạng băm (`sha256` kèm muối, hằng số
+> `CFG_PASS_HASH` trong `updater.py`) chỉ chặn được đường dễ nhất là mở file ra
+> thấy ngay chuỗi mật khẩu; mật khẩu bốn chữ số thì dò hết 10.000 khả năng chỉ
+> mất một nháy mắt. Mục đích là **ngăn sửa nhầm**, không phải giữ bí mật — đừng
+> đặt thứ gì thật sự cần giữ kín sau cái chốt này.
+>
+> Đổi mật khẩu: chạy dòng dưới rồi dán kết quả vào `CFG_PASS_HASH` trong
+> `updater.py`.
+>
+> ```
+> python -c "import hashlib;print(hashlib.sha256(('AltiumDbTool.v1:'+'matkhaumoi').encode()).hexdigest())"
+> ```
+
 ### Ô "Repo GitHub" nhận cả đường dẫn đầy đủ  *(1.6.6)*
 
 Dán `https://github.com/Nhatkhongbuon/Altium-DB-Library-Helper` vào ô Repo là **mọi** lời gọi GitHub trở thành `api.github.com/repos/https:/github.com/...` nên trả về 404 hết — tool báo "không liên lạc được GitHub / chưa có bản phát hành nào" dù repo vẫn sống. Đây chính là lý do tính năng cập nhật không chạy trước 1.6.6.
@@ -1067,209 +1110,4 @@ state_log.db        1.6 - nhật ký State (tự sinh)
 
 ---
 
-## Lịch sử phiên bản
 
-**1.7.6** — Nhatnpm
-- **Chỉ đổi số phiên bản, không thay đổi tính năng nào.** Bản này dựng ra để **thử cơ chế tự cập nhật của bản đóng gói `.exe`** vừa làm ở 1.7.5 — cần một bản đích có số cao hơn để bản 1.7.5 đang chạy nhìn thấy và cài đè lên. Mã nguồn giống hệt 1.7.5 ngoài `APP_VERSION` và `version_info.txt`.
-- Cách thử: build exe 1.7.5 rồi chép sang một thư mục riêng và chạy nó → build tiếp exe 1.7.6 → đưa `AltiumDbTool_v1.7.6_exe.zip` lên GitHub Release với tag `v1.7.6` → ở bản 1.7.5 đang chạy bấm **Liên hệ → Kiểm tra ngay**. Không muốn qua GitHub thì dùng thẳng nút **Cập nhật từ file .zip...** và chọn file đó — cùng một đường code `zip_info` → `install` → hỏi mở lại.
-
-**1.7.5** — Nhatnpm
-- **Kéo thả đổi kích thước cửa sổ mượt hẳn.** Nguyên nhân giật không nằm ở máy yếu mà ở chỗ mỗi pixel kéo đi Tk bắn ra một sự kiện `<Configure>`, và tool làm quá nhiều việc cho từng sự kiện. Bốn chỗ được cắt: (1) `self.bind("<Configure>")` trên cửa sổ chính thật ra bắt **cả sự kiện của mọi widget con** — Tk gửi sự kiện lên theo `bindtags`, mà bindtag của widget con nào cũng chứa đường dẫn của toplevel, nên kéo cửa sổ một cái là hàm bị gọi hàng nghìn lần chỉ để rơi vào dòng `return` đầu tiên; nay cửa sổ có **bindtag riêng** nên chỉ còn sự kiện của chính nó. (2) `reflow` không xếp lại `grid` mỗi lần đổi 40 px nữa — bố cục chỉ có **hai dạng** (rộng ≥ 1000 px / hẹp), đổi dạng mới xếp lại; xếp lại `grid` là thứ đắt nhất trong cả chu trình vẽ. (3) Thanh tab gom sự kiện lại, **nhớ kết quả `font.measure()`**, và **bỏ qua hẳn** khi "chữ ký" lần vẽ không đổi. (4) Khung cuộn và biểu đồ cột cũng gom sự kiện thay vì chạy ngay từng cái một. Toàn bộ tiện ích gom / lọc nằm ở module mới **`perf.py`**.
-- **Tab đã mở nhưng đang bị che không còn kéo tụt tốc độ.** Trước đây chuyển tab chỉ là `tkraise()` — view cũ vẫn nằm nguyên trong `grid`, và Tk **tính lại bố cục cho cả 12 cây widget** mỗi lần cửa sổ đổi kích thước, mở càng nhiều tab thì kéo càng nặng. Nay dùng `grid_remove()` (giữ nguyên mọi tuỳ chọn grid, hiện lại y như cũ), và khung cuộn của tab đang ẩn cũng ngừng tự đo mỗi 1/4 giây.
-- **Dãn rộng cột bảng nhanh hơn nhiều lần.** `autofit_tree` cũ quét theo **cột** ở vòng ngoài, theo **dòng** ở vòng trong, nên `tree.item()` và `font.measure()` bị gọi *(số cột × số dòng)* lần — bảng 5.000 dòng 8 cột là **80.000 lệnh gọi** xuống Tcl, chính là vài giây chờ sau khi bấm *Tra cứu thư viện*. Nay quét **đúng một lượt**, mỗi cột giữ 3 chuỗi dài nhất rồi mới đo pixel cho riêng chúng; bề rộng cột ra y hệt.
-- **Ô Nhật ký không còn vẽ lại toàn bộ cửa sổ sau mỗi dòng.** `update_idletasks()` sau mỗi dòng nghĩa là ghi 500 dòng thì vẽ lại 500 lần. Nay giới hạn nhiều nhất ~12 lần/giây — mắt không phân biệt được, nhưng các tác vụ dài (quét State, đối chiếu BOM, tải datasheet hàng loạt) nhanh lên thấy rõ.
-- **Thanh Taskbar hiện icon ếch / nhện, không còn icon Python.** Windows **không** lấy icon Taskbar từ cửa sổ: nó gom cửa sổ vào nút Taskbar theo **AppUserModelID** của tiến trình rồi lấy icon của ứng dụng đăng ký với ID đó — chạy bằng `pythonw.exe` thì ID mặc định là của Python, nên dù cửa sổ đã đeo icon ếch đàng hoàng (sửa từ 1.7.1) nút Taskbar vẫn là Python. Nay tool khai báo AppUserModelID riêng **ngay lúc nạp module, trước khi cửa sổ đầu tiên được tạo**, và gắn icon thẳng vào HWND bằng `WM_SETICON` với **hai cỡ riêng** (`ICON_SMALL` cho thanh tiêu đề, `ICON_BIG` cho Taskbar và Alt+Tab) nên cả hai chỗ đều nét. Đặt lại một lần nữa ở sự kiện `<Map>` — mốc "cửa sổ đã hiện thật" chắc ăn hơn mốc hẹn giờ 400 ms của 1.7.1. Đổi logo trong Functions → Giao diện vẫn ăn ngay ở cả ba chỗ.
-- **Đóng gói được thành file `.exe` chạy độc lập, không cần cài Python.** Double-click **`build_exe.bat`** là ra `dist\AltiumDbTool.exe` (icon con ếch), kèm `version.json` và gói `History\AltiumDbTool_v<ver>_exe.zip` sẵn sàng đính kèm lên GitHub Release. Chỉ một file exe: icon Windows vẽ cho một `.exe` trên Explorer và Taskbar là icon **nhúng sẵn bên trong file**, Windows đọc nó từ lúc chưa mở chương trình nên nó không thể đọc `config.json` — mà một exe chỉ nhúng được một icon. Lựa chọn **Ếch / Nhện bên trong tool vẫn giữ nguyên**: nó đổi icon cửa sổ, icon Taskbar lúc đang chạy và ảnh tab Liên hệ; chỉ icon của file exe trên Explorer là cố định. Kèm `AltiumDbTool.spec` (tắt UPX vì file nén UPX hay bị diệt virus báo nhầm), `make_release.py` và `version_info.txt` cho phần *Properties* của exe. Ảnh icon được nhúng vào gói; `config.json` / `rules.json` / `api_keys.enc` thì không — chúng nằm cạnh file exe để sửa được và còn giữ lại sau khi cập nhật.
-- **Bản `.exe` tự cập nhật được từ GitHub Release.** Trước đó cập nhật tự động sẽ hỏng hoàn toàn với bản đóng gói, vì hai lẽ độc lập nhau. Một: `zip_info()` bắt buộc tìm thấy `altium_db_tool.py` trong zip để đọc `APP_VERSION`, nên gói chỉ có exe bị từ chối thẳng — nay updater nhận ba kiểu gói (`py`, `exe`, `exe+py`) và đọc số phiên bản của bản đóng gói từ **`version.json`** đi kèm, vì trong file exe mã nguồn đã thành `.pyc` nên không còn dòng chữ `APP_VERSION` nào để tìm. Hai, và quan trọng hơn: **Windows khoá file exe của tiến trình đang chạy** — `shutil.copy2()` đè lên chính nó ném `[WinError 32]`, mà lỗi đó lại bị nuốt vào danh sách `skipped` nên tool báo "đã cập nhật" trong khi thực tế thay **0 file**. Nay dùng phép **đổi tên rồi thay chỗ**: Windows cấm ghi đè exe đang chạy nhưng vẫn cho đổi tên nó (khoá là khoá nội dung, không khoá mục thư mục), nên tool cất exe cũ sang `_update_backup\<ngày_giờ>\` rồi chép bản mới vào đúng đường dẫn cũ; hỏng ở bước chép thì trả lại tên cũ ngay. Chrome và VS Code cập nhật y cách này.
-- **File `.exe` được thay TRƯỚC mọi file khác, và thất bại là dừng cả lượt.** Nếu để nó chạy lẫn với các file còn lại thì có cảnh: thay exe thất bại nhưng `version.json` mới vẫn được ghi đè, thành ra trên đĩa `version.json` nói "1.7.6" trong khi exe vẫn là "1.7.5" — và bước kiểm lại sau khi cài đọc chính `version.json` nên báo **"cài thành công"**. Một bản cập nhật thất bại mà báo thành công là kiểu lỗi tệ nhất, nên nay exe đi trước, hỏng thì ném lỗi ra ngay lúc chưa file nào bị động tới.
-- **Cài xong tool hỏi rồi tự mở lại.** Bản exe bắt buộc phải mở lại: file trên đĩa đã là bản mới nhưng tiến trình đang chạy vẫn là code cũ nạp vào bộ nhớ từ lúc mở. Đồng ý thì tool chạy exe mới rồi thoát tiến trình cũ. **Hoàn tác** vẫn dùng được — exe cũ nằm nguyên trong `_update_backup`, và nút *Hoàn tác* cũng đi qua phép đổi tên đó; bản mới lỡ hỏng không mở lên được thì chép file exe cũ đè ra ngoài bằng tay cũng xong.
-- **Chặn cài chéo kiểu gói.** Đang chạy exe mà gói chỉ có mã nguồn thì chép `.py` vào cạnh exe cũng vô nghĩa (exe chạy code nằm bên trong chính nó); đang chạy Python mà gói chỉ có exe thì cũng chẳng nâng cấp được gì. Cả hai chiều nay đều báo rõ lý do và dừng, thay vì cài xong rồi không thấy đổi gì. Gói `exe+py` mà `version.json` lệch với `APP_VERSION` trong `.py` cũng bị chặn — đóng gói sai thì cài vào chỉ chuốc hoạ.
-- `APP_DIR` khi chạy bản đóng gói lấy từ `sys.executable` thay vì `sys.argv[0]`: chạy từ shortcut có đặt "Start in" khác chỗ, hoặc gõ tên exe trần trong hộp Run, thì `argv[0]` có thể là đường dẫn tương đối và `abspath` ghép nó với thư mục hiện hành — tool đi tìm `config.json` ở nhầm chỗ.
-- Sửa luôn một lỗi bố cục cũ: kéo cửa sổ hẹp rồi rộng trở lại thì ô *Part number* bị phình ra hết hàng, vì `columnconfigure(1, weight=1)` đặt ở nhánh hẹp không bao giờ được trả về.
-
-**1.7.4** — Nhatnpm
-- **Bôi đen và copy được dữ liệu trong mọi bảng.** Widget bảng của Tk vẽ chữ lên canvas chứ không phải ô văn bản, nên trước đây kéo chuột không chọn được ký tự nào và Ctrl+C không làm gì cả — nhìn thấy mã linh kiện báo lỗi ngay trước mắt mà muốn dán sang Altium thì phải gõ lại tay, gõ sai một ký tự là tra ra rỗng. Nay mỗi bảng có: **Ctrl+C** chép các dòng đang chọn (cột cách nhau bằng Tab, dán vào Excel là vào đúng từng ô), **Ctrl+Shift+C** chép kèm tiêu đề, **Ctrl+A** chọn tất cả, chọn nhiều dòng bằng Shift/Ctrl+click, và **menu chuột phải** với *Sao chép ô / dòng / cột / cả bảng*.
-- **Lớp phủ bôi đen ngay trong ô.** Bấm **Enter** (hoặc nháy phải → *Bôi đen chữ trong ô…*) thì một ô nhập **chỉ đọc** phủ đúng lên ô đang chọn: kéo chuột lấy một đoạn bất kỳ, Ctrl+C chép đoạn đó, mũi tên trái/phải chạy hết chữ dài hơn bề rộng cột, **Tab / Shift+Tab** sang ô bên cạnh, **↑ / ↓** sang dòng trên dưới, **Esc** đóng. Ô chỉ đọc nên gõ phím không sửa được dữ liệu. Những bảng vốn đã dùng nháy đúp cho việc khác (sửa ô ở tab *Thêm linh kiện*, xem chi tiết ở *Tra cứu thư viện*) giữ nguyên nháy đúp như cũ — ở đó dùng Enter hoặc menu chuột phải. Chi tiết ở mục **3l**.
-- Ô **Nhật ký** và các danh sách trong hộp thoại *Tạo file thư viện mới* cũng có menu chuột phải *Sao chép / Chọn tất cả*.
-- **`Master_Library` (From Nhatnpm) là kiểu mặc định, `Database_Library` (From Hoangnh277) là kiểu tuỳ chọn.** Từ 1.7.3 tool đọc được cả hai kiểu, nhưng màn hình *Chuyển đổi định dạng DB* lại đặt `Database_Library` lên trước và chọn sẵn nó, nhìn như đó mới là đường chính. Nay kiểu mặc định đứng trước và được chọn sẵn, tên mỗi kiểu ghi kèm tác giả và vai trò (*kiểu mặc định* / *kiểu tuỳ chọn*) ở hộp chuyển đổi, dòng Nhật ký khi nạp file, hộp thoại **Chọn...** và mô tả trong cửa sổ Functions. **Chỉ là cách hiển thị** — đọc, ghi và chuyển đổi hai chiều vẫn chạy y hệt nhau, mở file nào tool cũng tự nhận ra kiểu của nó.
-- File chưa nhận ra kiểu quen thuộc thì hộp chuyển đổi để đích ở kiểu mặc định thay vì đoán bừa.
-
-**1.7.3** — Nhatnpm
-- **Đọc và ghi được file database kiểu `Database_Library.xlsx`.** Trước đây tool đi tìm đúng một cột tên `Design Item ID` để làm khoá; file kiểu này đặt tên khoá là **`Mfr. #`** nên tool nạp được sheet mà không thấy dòng nào — bảng thông số trống, tra trùng không chạy, ghi vào là hỏng. Nay cột khoá được phân giải theo danh sách tên quen thuộc (`Design Item ID`, `Mfr. #`, `Manufacturer Part Number`…), và các tên tương đương khác cũng được nối vào nhau (`Manufacturer` ↔ `Manufacturer 1`, `Package` ↔ `Size`), nên **mọi công cụ có sẵn chạy nguyên vẹn trên cả hai kiểu file** mà không phải sửa từng chỗ. Mở file nào tool cũng tự nhận kiểu và ghi vào Nhật ký. Chi tiết ở mục **3k**.
-- **Ghi thêm dòng vào Excel Table cho đúng.** Dữ liệu của kiểu file này nằm trong ListObject; thêm dòng ngay dưới bảng mà không nới `ref` của bảng thì Excel và Altium đều coi như dòng đó không tồn tại — nhìn thấy chữ nhưng query ra không có. Nay khi ghi bằng `openpyxl`, tool nới cả `ref` của Table lẫn `ref` của bộ lọc; ghi đè lên dòng cũ thì bảng giữ nguyên kích thước. Đọc file cũng bám theo phạm vi Table nên **bảng không bắt đầu ở ô A1 vẫn đúng**.
-- **Giữ nguyên văn công thức structured reference.** `=Table1[[#This Row],[Mfr. '#]]` trỏ theo *tên cột* và tự hiểu dòng của chính nó; đem dịch toạ độ như công thức thường là hỏng. Tool nhận ra dạng này và chép nguyên, hiểu cả dấu `'` thoát ký tự `#`.
-- **Công thức trỏ sang file Excel khác thì không chép nữa — điền giá trị thật.** File đi vòng qua nhiều máy hay còn sót ô kiểu `=TRIM(MID([1]!Table33[[#This Row],[Description]],...))`, trong đó `[1]!` là một file Excel không còn ở đây; chép xuống dòng mới chỉ đẻ thêm `#REF!`. Nay một cột chỉ được coi là **cột công thức** (dòng xanh, không ghi đè) khi công thức có ở **≥ 60%** số dòng đã có dữ liệu **và** không trỏ ra ngoài file; không đạt thì tool coi là cột dữ liệu và điền giá trị lấy từ API. Nạp file xong, Nhật ký liệt kê luôn các cột rơi vào diện này.
-- **Kiểm tra thư viện: thêm mục "Ô đang báo lỗi Excel"** — đếm `#REF!`, `#N/A`, `#VALUE!`, `#NAME?`… theo từng cột kèm ví dụ dòng đầu tiên, để biết chỗ nào cần gõ lại tay.
-- **`Footprint Ref` không đoán bừa nữa.** Với sheet gộp nhiều loại linh kiện (`PASSIVE` có cả điện trở, tụ, cuộn cảm, ferrite) thì riêng `0402` không đủ để suy ra footprint — trước đây tool lấy dòng đầu tiên khớp kích thước, ra footprint của linh kiện khác hẳn. Nay chỉ điền khi khớp **cả `Type` lẫn `Size`**, hoặc khi kích thước đó trong cả sheet chỉ ứng với đúng một footprint; không chắc thì để trống cho ô đỏ nhắc tự điền. Mục kiểm tra *"Footprint Ref khác quy luật của sheet"* cũng tính theo cặp `Type / Size` nên hết báo nhầm hàng loạt.
-- **Điền được các cột riêng của kiểu file này**: `Type` (RESISTOR, TVS DIODE, MCU… suy từ Category/Description), `Footprint type` (`SMD`/`TH` từ `Mounting Type`), `Value` (ghép thông số chính với định mức, `4.7K/1/8W`), `Size`, `Manufacturer 1`. Sheet đặt tên theo nhóm lớn (`PASSIVE`, `IC`…) mà `rules.json` chưa có từ khoá thì dùng **bảng từ khoá mặc định theo nhóm**.
-- **Công cụ chuyển đổi hai chiều**: *Functions → Thư viện → **Chuyển đổi định dạng DB***. Có bảng xem trước sheet nào về sheet nào kèm số dòng; kết quả **luôn ghi ra file mới**, không đụng file gốc. Chiều sang `Master_Library` tách sheet theo cột `Type` và gom các cách viết khác nhau của cùng một loại làm một; chiều sang `Database_Library` gom sheet về 5 nhóm lớn và tạo sẵn Excel Table. Tick *Giữ lại các cột lạ* để cột nào bên kia không có chỗ nhận thì được đẩy về cuối sheet chứ không bị bỏ đi.
-- Hộp thoại **Chọn...** nhận cả hai kiểu file, không còn ghi cứng tên `Master_Library.xlsx`.
-- Sinh `.DbLib`: cột khoá được map thành tham số `Design Item ID` với `FieldType=0` **dù tên cột trong Excel là gì** — Altium cần đúng tên tham số đó để coi là khoá chính, còn tên cột thì đặt gì cũng được.
-- `norm_key()` bỏ thêm dấu `.` và `!` khi so tên cột, nên `Mfr. #` khớp được với `Mfr #`.
-- Sheet của kiểu `Database_Library` không còn bị cảnh báo *"Sheet thiếu cột State"* — kiểu file đó vốn không có cột State, đấy là thiết kế chứ không phải thiếu sót.
-
-**1.7.2** — Nhatnpm
-- **Sửa lỗi mất nút "Lưu" ở trang Cấu hình — không lưu được API key vừa nạp.** Chiều cao của Notebook lấy theo **thẻ dài nhất**, nên trang Cấu hình lúc nào cũng cao hơn khung nhìn; hàng nút nằm dưới cùng bị đẩy ra ngoài tầm mắt, mở thẻ nào cũng chỉ thấy khoảng trống rồi tới nút *Đóng* của cửa sổ. Lỗi này có từ 1.6.6, khi vùng nội dung được bọc vào khung cuộn. Nay nút **Lưu** (và dòng "✔ Đã lưu cấu hình lúc…") được ghim xuống **thanh dưới cửa sổ Functions**, ngay bên trái nút *Đóng* — nằm ngoài vùng cuộn nên không bao giờ cuộn mất nữa; sang mục khác thì nó tự ẩn đi.
-- Panel Cấu hình dùng độc lập (ngoài cửa sổ Functions) vẫn giữ hàng nút bên trong như cũ.
-
-**1.7.1** — Nhatnpm
-- **Sửa icon cửa sổ chỉ hiện sau khi vào Functions → Giao diện chọn lại logo.** `wm iconbitmap <cửa sổ> -default <file>` chỉ ghi nhớ icon **mặc định cho các cửa sổ dựng sau đó**; cửa sổ chính lúc `__init__` còn chưa có HWND thật để gắn icon vào nên lệnh trôi qua vô hiệu — mở tool lên là icon trống, phải chọn lại logo (lúc đó cửa sổ đã hiện) thì mới thấy. Đó cũng là lý do 1.7.0 chưa hết lỗi dù file `.ico` đã đúng định dạng. Nay gọi **cả dạng thường** `wm iconbitmap <cửa sổ> <file>` để gắn thẳng cho cửa sổ này, **và** hẹn đặt lại một lần nữa sau 400 ms khi cửa sổ đã hiện xong. Lần đặt lại không hẹn tiếp nên không có vòng lặp.
-- **Icon nhỏ dùng ảnh riêng**: thêm `frog_icon.png` — bản cắt sát vào đầu và nơ, 128 px — cho đường dự phòng `iconphoto`. Ảnh lớn `frog.png` nhiều nền trắng, thu về 16 px chỉ còn một ô trắng nên nhìn như icon không đổi. Quy tắc chung: cạnh `<tên>.png` mà có `<tên>_icon.png` thì icon cửa sổ dùng file đó.
-
-**1.7.0** — Nhatnpm
-- **Nhận cả file `.zip` bị thả nhầm vào ô ghi chú phát hành.** Kéo file vào ô *Describe this release* thì GitHub chỉ chèn một link user-attachment vào phần mô tả, trường `assets` của API vẫn rỗng — nên 1.6.8 báo *"không đính kèm file .zip nào"* dù trang Release nhìn thấy có file. Nay không có asset thì tool dò tiếp link `.zip` trong ghi chú; chỉ nhận link trỏ tới tên miền GitHub, ưu tiên link có số phiên bản trong tên, và asset thật vẫn được ưu tiên trước. Câu báo lỗi cũng chỉ rõ hai vùng thả file khác nhau thế nào.
-- **Sửa icon cửa sổ không hiện con ếch.** Hai file `.ico` trước đây gồm toàn các mục nén PNG; Tk trên Windows tự đọc file `.ico` và coi 4 byte đầu mỗi mục là `BITMAPINFOHEADER`, gặp mục PNG là đọc ra rác rồi bỏ cuộc — `wm iconbitmap` **luôn thất bại âm thầm** và rơi xuống đường `iconphoto`. Con nhện nền trong suốt thu về 16 px vẫn nhìn ra, còn con ếch nền trắng thì chỉ còn một ô trắng, nên trông như logo không đổi. Nay cả `frog.ico` lẫn `icon.ico` được ghi lại ở **dạng BMP** (8 cỡ, 16→128 px) để Tk đọc được thật, và ảnh ếch dùng cho icon được **cắt sát vào đầu** để ở 16 px vẫn rõ là con ếch. Đường `iconphoto` dự phòng cũng thu ảnh về ~64 px trước khi đặt thay vì ném cả ảnh 572 px.
-- `log()` gọi được cả trước khi ô Nhật ký kịp dựng — dòng đến sớm thì xếp hàng, có ô thật là đổ ra. `set_icon()` chạy rất sớm trong `__init__` nên nếu nó cần ghi một dòng cảnh báo thì trước đây sẽ làm chết lúc mở tool.
-
-**1.6.9** — Nhatnpm
-- **Đổi logo sang con ếch** ở tab Liên hệ và icon cửa sổ.
-- **Chọn được logo**: Functions → Giao diện → **Logo**, hai lựa chọn *Ếch* / *Nhện* kèm ảnh xem trước. Đổi là thấy ngay cả ảnh lớn lẫn icon thanh tiêu đề, không cần mở lại tool; lưu ở khoá `logo` trong `config.json`.
-- Hệ số thu nhỏ ảnh nay tính từ bề ngang thật của file thay vì để cứng `subsample(3, 3)`, nên thay ảnh khác kích thước vẫn ra đúng cỡ. Thiếu file ảnh thì lùi về logo còn lại, khung chọn logo hỏng cũng không kéo đổ cả trang Giao diện.
-
-**1.6.8** — Nhatnpm
-- **Sửa lỗi cập nhật xong mà phiên bản không đổi — thậm chí bị hạ cấp.** Khi Release trên GitHub không đính kèm file `.zip`, tool lặng lẽ lui về tải `zipball_url` — tức **mã nguồn của nhánh** tại lúc đặt tag. Số phiên bản lấy theo tag còn nội dung lấy theo mã nguồn, nên đặt tag `V1.6.7` trong khi nhánh `main` vẫn còn code 1.6.5 là tool báo "đã cập nhật lên 1.6.7" rồi chép đè 1.6.5 lên máy: mở lại vẫn thấy 1.6.5, và lần sau mở tool lại tiếp tục mời cập nhật lên 1.6.7 — quẩn vòng. Nay bỏ hẳn đường lui đó; Release thiếu asset thì báo thẳng và chỉ cách xử lý.
-- **Ba lớp kiểm tra trước khi chép đè**: file có mở được và đúng là bản của tool không; `APP_VERSION` bên trong file có khớp số ghi trên Release không; file có cũ hơn bản đang chạy không. Sai một điều là dừng, **không đụng gì vào máy**.
-- **Kiểm lại sau khi chép**: đọc `altium_db_tool.py` vừa ghi ra đĩa, phiên bản không đúng như mong đợi thì cảnh báo ngay kèm đường dẫn `_update_backup` để hoàn tác. Nút *Cập nhật từ file .zip...* cũng kiểm lại như vậy và báo theo phiên bản đọc được trên đĩa, không báo theo số đoán từ tên file.
-
-**1.6.7** — Nhatnpm
-- **Kiểm tra tự động chỉ còn một nguồn: GitHub Releases.** Bỏ hai đường dò cũ (quét thư mục `.zip` trong repo và đọc `version.json`) vì chúng nhặt bất kỳ file `.zip` nào có số phiên bản trong tên, dễ bắt nhầm bản cũ hoặc bản thử nghiệm nằm chung repo. Bản phát hành chính thức đặt ở Releases kèm file `.zip`; báo lỗi cũng nói rõ hơn — chưa có Release, Release thiếu file `.zip`, hay repo private thiếu token là ba câu khác nhau.
-- **Cập nhật thủ công từ file `.zip`**: nút **Cập nhật từ file .zip...** ở tab Liên hệ và Cấu hình → Cập nhật. Tool soi file trước khi cài — zip có hỏng không, có đúng bản của tool không, phiên bản bên trong là bao nhiêu (đọc từ `APP_VERSION` chứ không tin tên file) — rồi mới hỏi. Cài bản cũ hơn vẫn được nhưng có cảnh báo. **File `.zip` của bạn không bị xoá** sau khi cài; `config.json`, `rules.json`, `api_keys.enc`, cache, nhật ký vẫn giữ nguyên và vẫn hoàn tác được.
-- **Thanh cuộn cửa sổ Functions luôn hiện**, không tự ẩn tự hiện nữa — bố cục hết nhảy, và nhìn con trượt là biết trang còn cuộn được hay không.
-- **Sửa lỗi thanh cuộn báo sai vùng cuộn**: khung bên trong bị ghim cứng kích thước nên nội dung phình ra mà Tk không báo sự kiện nào, vùng cuộn giữ số cũ — con trượt chiếm hết đường ray trong khi phần dưới trang bị cắt, phải kéo cửa sổ một cái mới đúng. Nay khung tự đo lại mỗi 1/4 giây.
-
-**1.6.6** — Nhatnpm
-- **Sửa tính năng cập nhật — trước đây không chạy được.** Ô *Repo GitHub* để nguyên đường dẫn `https://github.com/...` nên mọi lời gọi thành `api.github.com/repos/https:/github.com/...` và trả về 404; tool báo "chưa có bản phát hành nào" dù repo vẫn sống. Nay ô này nhận cả URL đầy đủ, dạng `git@github.com:` lẫn `owner/repo` và tự cắt về `owner/repo`; cấu hình cũ được dọn tự động lúc mở tool.
-- **Tìm bản mới ở nhiều thư mục.** Trước chỉ nhìn đúng một thư mục (`ADBTool/`); repo này cất các bản `.zip` trong `History/` nên không bao giờ tìm thấy. Nay dò lần lượt thư mục trong cấu hình → `History/` → `ADBTool/` → `releases/` → `dist/` → gốc repo, và thử cả ba nguồn (Releases, thư mục `.zip`, `version.json`) rồi **chọn bản có số phiên bản cao nhất** thay vì dừng ở nguồn đầu tiên.
-- **Hộp thoại hỏi cập nhật khi mở tool**: mở phần mềm là tự kiểm tra, có bản mới thì hiện hộp thoại kèm ghi chú phát hành với ba lựa chọn — **Cập nhật ngay**, **Bỏ qua phiên bản này** (nhớ vào `update.skip_version`, lần sau không hỏi lại bản đó nhưng bản cao hơn thì vẫn hỏi), **Đóng**. Thêm nút *Kiểm tra ngay* và *Hỏi lại bản đã bỏ qua* trong Cấu hình → Cập nhật.
-- **Cửa sổ Functions có thanh cuộn**: trang Cấu hình dài hay cửa sổ bị thu nhỏ đều không còn bị cắt mất phần dưới. Bánh xe chuột cuộn được ở mọi chỗ trong trang, trừ những widget tự cuộn lấy (bảng, ô văn bản, hộp chọn). Cửa sổ thu nhỏ được tới 660×420 thay vì 900×520. Cửa sổ *Tạo file thư viện mới* cũng vậy (640×460, hàng nút ghim ở đáy).
-- **Chữ tự xuống dòng theo bề rộng thật**: các dòng mô tả dài trước kia đặt bề rộng xuống dòng bằng số pixel cố định nên thu nhỏ cửa sổ là mất chữ; nay tính lại mỗi lần khung đổi kích thước.
-- Repo mặc định đổi sang `Nhatkhongbuon/Altium-DB-Library-Helper`, thư mục bản phát hành mặc định là `History`
-
-**1.6.5** — Nhatnpm
-- **Bỏ nút "Đóng" bị lặp trong cửa sổ Functions.** Backup & khôi phục, History của Altium, Cấu hình và Ghim tab vốn là cửa sổ riêng nên mỗi cái có sẵn một nút *Đóng*; từ 1.6.4 chúng được nhúng vào cửa sổ Functions vốn đã có nút *Đóng* ở góc dưới, thành ra hiện hai nút giống hệt nhau nằm chồng lên nhau. Nay panel nhận thêm tuỳ chọn `show_close`: nhúng vào cửa sổ Functions thì giấu nút của chính nó, chỉ giữ **một** nút *Đóng* chung ở đáy cửa sổ. Panel mở thành cửa sổ riêng (qua `_wrap`) vẫn giữ nút của mình nên không mất đường thoát.
-
-**1.6.4** — Nhatnpm
-- **Sửa lỗi Package mất số 0 ở đầu.** `0402` ghi vào ô định dạng General thì Excel đổi thành số `402`, kéo theo `Description` và `Footprint Ref` sai hết. Nay file sinh ra để **cột chữ ở định dạng Text**, và lúc ghi tool **ép định dạng Text** cho những giá trị kiểu `0402` / `0603` / `01005` (cả đường xlwings lẫn openpyxl). Tab *Sức khoẻ thư viện* thêm mục bắt các Package chỉ có 3 chữ số — dấu hiệu đã mất số 0.
-- **Chế độ tự đặt nhóm và trường** khi tạo file thư viện mới: tự gõ tên nhóm, tick trường nên có, thêm trường riêng, chọn symbol dùng chung. Trường bắt buộc luôn có sẵn và không bỏ được.
-- **Ô nhập có chữ gợi ý mờ** (placeholder) — gõ vào là gợi ý biến mất, không bị tính nhầm thành dữ liệu.
-- **Thanh công cụ gọn lại**: chỉ còn Chọn / Tạo mới / Nạp lại / Mở Excel, cộng nút **⚙ Functions** và nút sáng/tối.
-- **Cửa sổ Functions**: cột trái liệt kê Backup, History, Cấu hình, Ghim tab, Giao diện — bấm vào thì nội dung hiện ở cột phải như File Explorer. Chỉ mở một cửa sổ, và không chiếm quyền điều khiển nên các bảng con mở từ đó dùng được ngay.
-- Bên trong: Backup / History / Cấu hình / Ghim tab từ cửa sổ riêng chuyển thành **panel** (`ui_functions.py`), hộp thoại tạo thư viện tách ra `ui_newlib.py`, widget dùng chung vào `ui_widgets.py`
-
-**1.6.3** — Nhatnpm
-- **Sửa lỗi thẻ thông tin tab hiện sai chỗ**: thẻ bay lên góc trên trái màn hình thay vì nằm dưới tab. Nguyên nhân: cửa sổ thẻ được hiện ra trước rồi mới gọi đặt vị trí — trên Windows lệnh đó bị bỏ qua. Giờ cửa sổ được giấu đi, đặt cả kích thước lẫn toạ độ xong mới hiện, và tự né mép màn hình.
-- Thêm tuỳ chọn **bật / tắt thẻ thông tin tab** và **chỉnh độ trễ** (mặc định 420 ms) ở Cấu hình → Giao diện
-- **Tạo file thư viện mới ngay trong tool** (nút **Tạo mới...**): dựng `Master_Library.xlsx` đúng cấu trúc — 13 nhóm, Excel Table, công thức và cột cố định điền sẵn ở dòng mầm — kèm tuỳ chọn sinh luôn `Database_Libs.DbLib` đã map đầy đủ trường. Có cả chế độ **sao cấu trúc từ file đang mở** (không chép dữ liệu).
-- **Trình xem datasheet**: nút **Xem datasheet** ở tab Thêm linh kiện và tab Tra cứu thư viện — ưu tiên mở file đã tải về máy, chưa có thì mở link API trả về bằng trình duyệt. Tắt được trong Cấu hình.
-- Bộ kiểm tra sức khoẻ không còn báo nhầm "Dòng không có Design Item ID" với dòng mầm của file vừa tạo
-
-**1.6.2** — Nhatnpm
-- **Auto-update chạy được với repo private**: thêm ô **GitHub token** trong Cấu hình → Cập nhật. Token đi kèm `Authorization` ở cả ba đường tìm bản mới, và file `.zip` của release được tải qua URL API của asset. Token **được mã hoá chung với API key** trong `api_keys.enc`, không ghi vào `config.json`.
-- Báo lỗi rõ hơn: repo private mà chưa có token thì nói thẳng "GitHub trả về 404 vì repo đang private, nhập token ở Cấu hình → Cập nhật" thay vì "không liên lạc được GitHub"
-- **Sửa lỗi**: tag kiểu `V1.6.0` (chữ V hoa) bị hiển thị nguyên cả chữ V trong phần thông báo bản mới
-
-**1.6.1** — Nhatnpm
-- **Ghim tab**: chọn tab nào hiện trên thanh làm việc (nút **Tab...** hoặc Cấu hình → Giao diện), tab bỏ chọn thì ẩn đi cho các tab còn lại rộng ra. Có sẵn bộ gọn 6 tab; tab *Thêm linh kiện* luôn hiện; tab đang ẩn mà được mở từ nơi khác thì tự hiện lại tạm thời. Lưu ở khoá `visible_tabs` trong `config.json`.
-- **Rê chuột vào tab hiện thẻ thông tin**: tên đầy đủ + một dòng mô tả tab đó dùng để làm gì — đọc được ngay cả khi thanh tab chật và tên bị cắt thành `Thêm lin...`
-- **Sửa lỗi: cửa sổ so sánh backup bị khoá.** Cửa sổ *Quản lý backup* đang chiếm quyền điều khiển (modal) nên cửa sổ so sánh mở ra không bấm được nút nào, phải tắt cửa sổ backup trước. Giờ cửa sổ backup nhả quyền cho cửa sổ so sánh, đóng cửa sổ so sánh (nút Đóng, dấu ✕ hay phím Esc) thì quyền trả về cửa sổ backup.
-- Nút **Kiểm tra** ở khung .DbLib đổi tên thành **Kiểm tra lại** và có thêm dòng giải thích nó làm gì, kèm ghi chú vì sao nút *Sửa đường dẫn* đôi lúc bị xám
-
-**1.6.0** — Nhatnpm  *(bản lớn)*
-
-**Bảo mật**
-- **API key được mã hoá ra file riêng** (`api_keys.enc`), `config.json` không còn chứa key. Hai chế độ chọn trong Cấu hình: **DPAPI** (không cần mật khẩu, gắn với tài khoản Windows) hoặc **mật khẩu** (PBKDF2-HMAC-SHA256 200k vòng + HMAC xác thực, mang sang máy khác được). Chỉ dùng thư viện chuẩn của Python.
-- **Xuất / nạp file key** để dùng lại cho những lần import sau, không phải gõ lại key
-- Lần chạy đầu thấy key còn dạng chữ thường thì hỏi mã hoá ngay, và tự thêm `config.json` / `api_keys.enc` / `API.txt` vào `.gitignore`
-
-**Nhanh hơn**
-- **Cache tra cứu bằng SQLite**, bật/tắt và đặt thời hạn ngay trong Cấu hình. Quét lại thư viện trong ngày gần như tức thì, lấy từ cache thì không phải nghỉ giữa các lần gọi API. Có nút xoá cache, dọn mục quá hạn, xem dung lượng.
-
-**Theo dõi được thay đổi**
-- **Nhật ký thay đổi State**: mỗi lần quét lưu một ảnh chụp, tự so với lần trước và nói rõ mã nào đổi trạng thái, mã nào *xấu đi*. Cửa sổ riêng để so hai lần quét bất kỳ, xuất CSV.
-- **Khôi phục backup ngay trong app**, kèm **so sánh** backup với file hiện tại theo từng dòng / từng ô (bỏ qua cột công thức nên không bị nhiễu)
-
-**Tab mới**
-- **Sức khoẻ thư viện** — soi lỗi dữ liệu không cần mạng: `Design Item ID` trùng / trống, sheet thiếu cột bắt buộc hoặc cột State, **tiêu đề cột có ký tự vô hình** (đúng cái NBSP trong `Package ` của sheet Oscillator), `Footprint Ref` lệch quy luật, `Value Sort` sai, link datasheet hỏng, **symbol / footprint mồ côi**, **footprint chưa gắn 3D**
-- **Tự sửa đường dẫn `.DbLib`** ngay trong tab đó: ghi lại `Data Source=` theo máy hiện tại (có backup `.bak`), đối chiếu bảng Enabled với sheet thật, kiểm tra Microsoft.ACE.OLEDB đã cài chưa và là 32 hay 64 bit
-- **Giá BOM** — lấy giá theo bậc số lượng, MOQ, lead time từ Digi-Key/Mouser, nhập số board là ra giá mỗi board và tổng đơn hàng, cột quy đổi VND, đánh dấu mã không đủ hàng, xuất CSV cho mua hàng
-- **Where-used** — đọc file `.SchDoc` để biết mã nào đang nằm trên board nào, kèm designator; lọc riêng các mã có vấn đề đang được dùng; xem cả mã trong thư viện không board nào dùng
-- **Thống kê** — số liệu theo nhóm / theo State, tỉ lệ có datasheet, top nhà sản xuất và package, biểu đồ vẽ bằng Canvas, xuất báo cáo HTML
-
-**Dùng hằng ngày dễ hơn**
-- **Cảnh báo trùng thông số ngay lúc thêm**, hỏi lại trước khi ghi thay vì để hậu kiểm
-- **Bộ lọc tham số** trong Tra cứu thư viện: State, Package, khoảng trị số (`1k`→`10k`, `100n`→`10u`), lọc theo cột bất kỳ
-- **Chế độ tối** cho toàn bộ app, chuyển bằng một nút trên thanh công cụ; mọi màu gom về một bảng màu chung
-- **Auto-update**: kiểm tra bản mới trên GitHub (Releases → thư mục `ADBTool/` → `version.json`), tải và cài đè, giữ nguyên cấu hình và key, có nút hoàn tác
-- Kiểm tra symbol/footprint thêm tuỳ chọn **Kiểm tra 3D model**
-
-**Sửa lỗi**
-- Link datasheet kiểu `//mm.digikey.com/...` (thiếu `https:`) trước đây tải hỏng, giờ tự bù thêm
-- So sánh file Excel không còn bị hàng trăm khác biệt giả do openpyxl xoá giá trị cache của ô công thức
-- Không lấy `StandardPackage` của Digi-Key làm bội số đặt hàng nữa (đó là số lượng cả cuộn, lấy nhầm thì tính giá BOM đòi mua cả cuộn cho mọi linh kiện)
-- Đọc giá kiểu châu Âu (`0,013`) không còn thành `13`
-
-**1.5.1** — Nhatnpm
-- Đề xuất thay thế → Thêm linh kiện: **tự tra cứu lại part number** bằng nguồn đang chọn trước khi hiện ở tab chính, nên bảng *Dữ liệu sẽ ghi* có đủ thông số, mô tả chi tiết và link datasheet thay vì trống nhiều ô (API `substitutions` của Digi-Key chỉ trả bản rút gọn)
-- Chạy nền, có tiến độ *"Đang tra cứu i/N: <mã>"*; tra cứu hỏng mã nào thì giữ nguyên dữ liệu cũ của mã đó, không mất dòng
-- Dữ liệu mới được bù thêm từ bản cũ (`merge_missing_from`) nên In-Stock / State / kiểu thay thế không bị mất
-
-**1.5.0** — Nhatnpm
-- **Sửa lỗi nặng ở Kiểm tra symbol/footprint**: bản cũ phụ thuộc gói `olefile`, máy nào thiếu gói đó thì tool đọc file thư viện ra rỗng rồi *lặng lẽ bỏ qua* toàn bộ việc đối chiếu tên → luôn báo "không phát hiện vấn đề nào". Đường dự phòng cũng sai (tìm `LIBREFERENCE=` trong khi Altium ghi `LibRef0=`).
-- Thêm `altium_ole.py`: trình đọc OLE/CFB thuần Python, đọc `FileHeader` của SchLib và bảng tên cuối `Library/Data` của PcbLib. Không cần thư viện ngoài, và hết báo nhầm với tên có dấu `/` (`USB2514B/M2`, `PCF85063ATL/1,118`)
-- Đọc không được file thư viện thì **báo lỗi rõ ràng**, kèm dòng trạng thái *"đọc được N/M file thư viện"*; thêm gợi ý tên gần giống khi Ref sai chính tả
-- **Đề xuất thay thế → Thêm linh kiện**: chọn mã (nháy đúp hoặc tích ✓) là nhảy thẳng sang tab Thêm linh kiện để tự xem dữ liệu sẽ ghi, đổi loại, tải datasheet rồi mới ghi
-- Thêm nút **History...**: dọn `History\*.Zip` của Altium trong `Symbols\` và `Footprints\`, giữ lại N bản mới nhất **cho từng thư viện**, xem trước file sắp xoá
-- **Xuất CSV** tự đặt vào `<Gốc xuất>\<tên báo cáo>\<tên báo cáo>_ngày_giờ.csv`, mỗi báo cáo một thư mục riêng, không đè bản cũ
-- Cấu hình API thêm ô *Xuất CSV* và *số bản History giữ lại*; `requirements.txt` bỏ `olefile`
-
-**1.4.2** — Nhatnpm
-- Tab vuông vắn đúng kiểu Chrome: ghép hình chữ nhật + cung tròn thay cho spline nên cạnh thẳng, chỉ bo hai góc trên
-- Sửa lỗi màu: `style.lookup` trả về tên màu hệ thống (`SystemButtonFace`) chứ không phải mã hex khiến mọi sắc độ rơi về cùng một màu, tab nhìn như nhau
-- Tab không chọn chìm hẳn vào nền, chỉ còn chữ + vạch ngăn; rê chuột mới hiện thẻ mờ
-
-**1.4.1** — Nhatnpm
-- Bỏ thanh menu, thay bằng **thanh tab kiểu Chrome** vẽ bằng Canvas: bo góc trên, tab đang chọn liền mạch với nền, tab còn lại chìm xuống, có hiệu ứng rê chuột và tự co khi cửa sổ hẹp
-- Bảng *Dữ liệu sẽ ghi* **cuộn ngang được thật**: cột tự dãn vừa nội dung thay vì co lại vừa khung, nên link datasheet dài không còn bị cắt
-- Nút *Tải datasheet cả thư viện* chuyển vào tab Tra cứu thư viện (chỗ cũ nằm trong menu)
-
-**1.4.0** — Nhatnpm
-- Gom mọi công cụ thành **tab trên cùng cửa sổ**, không mở cửa sổ rời nữa
-- Thêm tab **Liên hệ**: logo, tên tác giả, phiên bản, email `minhnhathust2002@gmail.com` kèm nút chép nhanh
-- Thanh cuộn dọc + ngang cho bảng dữ liệu và nhật ký; khung kéo thả giữa hai phần
-- Giao diện tự sắp lại khi đổi kích thước cửa sổ
-- Nút **Download datasheet** đổi màu xanh/cam theo việc có tìm được link hay không; tuỳ chọn tải kèm khi ghi; cột **DS** trong Thêm hàng loạt
-- Note dòng xanh chuyển xuống hàng riêng, cảnh báo trùng mã đưa lên hàng nút
-- Bỏ phần đóng gói .exe
-- **Sửa lỗi**: `Thêm hàng loạt` bị crash ở 1.3.0 do gọi nhầm `build_menu`, và thanh menu không hiện
-
-**1.3.0** — Nhatnpm  *(bản lớn)*
-- **Kiểm tra thư viện**: quét toàn bộ, cập nhật cột `State` (Normal / NRND / Obsolete / Last Time Buy / In-Stock = 0 / Not Found)
-- **Đề xuất linh kiện thay thế** trong cửa sổ riêng, ghi thẳng vào database
-- **Kiểm tra symbol / footprint**: file có tồn tại, tên có nằm trong `.SchLib` / `.PcbLib`
-- **Tra cứu thư viện** ngay trong app, hiện đủ mọi thông số, bôi đỏ mã NRND / Obsolete / Last Time Buy
-- **Đối chiếu BOM** với thư viện, thêm nhanh các mã còn thiếu
-- **Phát hiện trùng thông số**
-- **Tải datasheet** về thư mục tự chọn, lẻ hoặc cả thư viện
-- Đóng gói **.exe** bằng PyInstaller, icon con nhện, hộp thoại Giới thiệu
-- Thêm thanh menu; linh kiện mới tự có State ngay khi ghi
-
-**1.2.2** — Nhatnpm
-- Không còn cửa sổ Command Prompt khi chạy: thêm `run_silent.vbs` và `AltiumDbTool.pyw`, `run.bat` chuyển sang `pythonw`
-
-**1.2.1** — Nhatnpm
-- Đổi nhãn "Tồn kho" thành **In-Stock**; hết hàng ghi 0 thay vì để trống
-
-**1.2.0** — Nhatnpm
-- Hiện số lượng tồn khi tra cứu, thêm cột vào bảng chọn nhà sản xuất
-- Ghi số tồn vào Excel nếu sheet có cột tương ứng
-- Nạp API key từ file TXT, tự đọc `API.txt` đặt cạnh tool ở lần chạy đầu
-
-**1.1.0** — Nhatnpm
-- Chọn nhà sản xuất khi một part number có nhiều kết quả; ghi một hãng hoặc tất cả
-- Kết quả từ Digi-Key và Mouser được gộp, khử trùng theo cặp mã + hãng, xếp khớp nhất lên đầu
-- Hiện phiên bản và tên tác giả trên thanh tiêu đề và chân cửa sổ
-
-**1.0.0**
-- Tra cứu Digi-Key / Mouser, tự điền theo cấu trúc từng sheet, giữ nguyên công thức Excel
-- Thêm hàng loạt có bảng xem trước và tích chọn từng mã
-- Quản lý và tự dọn backup

@@ -1,8 +1,10 @@
 # Altium DB Library Helper
 
-**Phiên bản 1.7.9** — Nhatnpm
+**Phiên bản 1.8.0** — Nhatnpm
 
 Tool chạy trên PC: nhập **part number** → chọn (hoặc để tool tự nhận diện) **loại linh kiện** → tra cứu Digi-Key / Mouser → điền đúng các trường của sheet tương ứng → ghi vào file Excel dùng làm database của Altium.
+
+Từ **1.8.0**, giao diện được **tái cấu trúc toàn diện theo phong cách GitToolPCB** (thiết kế 3 tầng hiện đại, bảng màu Tailwind Zinc, Sidebar phân nhóm chuẩn UX, Command Palette `Ctrl+K`, thông báo nổi Toast Notification, hệ thống phím tắt tiện lợi). Xem mục **3o**.
 
 Từ **1.7.3** tool đọc và ghi được **hai kiểu file database** — tự nhận diện khi mở file, và chuyển đổi qua lại được:
 
@@ -972,6 +974,50 @@ ra ngoài bằng tay cũng xong.
 **Những gì KHÔNG bị đụng tới** khi cập nhật, y như trước: `config.json`,
 `rules.json`, `api_keys.enc`, `lookup_cache.db`, `state_log.db`. API key và cấu
 hình giữ nguyên.
+
+### 3o. Giao diện hiện đại & Hệ thống UI/UX phong cách Antigravity  *(1.8.0)*
+
+Bản **1.8.0** mang đến bước lột xác toàn diện về mặt thẩm mỹ và trải nghiệm người dùng, kết hợp tinh hoa giữa bố cục gọn gàng của **GitToolPCB** và ngôn ngữ thiết kế tối giản, hiện đại của **Antigravity**:
+
+### Bố cục 3 tầng khoa học & Tối ưu Responsive
+
+1. **TopBar (Thanh điều hướng đỉnh cao 48px)**:
+   - **Tên phần mềm tối giản**: Tên ứng dụng `Altium DB Tool` sắc nét, loại bỏ logo chữ A rườm rà.
+   - **Active Library Pill (Thanh chọn file Excel)**: Khung viên thuốc hiển thị tên file thư viện đang mở kèm chỉ báo trạng thái (xanh lá = sẵn sàng, xám = chưa nạp), cùng 2 nút chữ hiển thị rõ ràng, không dùng icon:
+     - `Browse File`: Mở hộp thoại chọn file Excel thư viện
+     - `Reload`: Nạp lại dữ liệu từ file hiện tại
+   - **Cụm nút công cụ phong cách Antigravity**:
+     - Các nút `Mở Excel`, `Functions`, `Lệnh... Ctrl+K`, `Ghi vào Excel`, `Sáng/Tối` được lược bỏ toàn bộ icon cạnh nút, hiển thị text tinh tế.
+     - Nút bo tròn nhẹ nhàng (radius 5-6px), vùng hover highlight làm đậm nét và rõ ràng theo chuẩn Antigravity.
+   - **Nút "Ghi vào Excel" thông minh**:
+     - **Mặc định (khi chưa có dữ liệu ghi)**: Nút hiển thị màu cam đỏ/cam (`#ea580c`) với chữ trắng nổi bật, **không bị làm mờ chữ**. Khi người dùng click, tool sẽ hiện thông báo nổi hướng dẫn tra cứu linh kiện trước.
+     - **Sẵn sàng ghi**: Khi dữ liệu đã được tra cứu đầy đủ, nút lập tức chuyển sang màu xanh lá (`#10b981`) rực rỡ báo hiệu sẵn sàng ghi vào file Excel.
+
+2. **Modern Sidebar (Cột điều hướng phân nhóm bên trái 220px)**:
+   - Toàn bộ 12 công cụ được phân nhóm trực quan với tiêu đề in hoa tinh tế:
+     - **CƠ BẢN**: *Thêm linh kiện*, *Tra cứu thư viện*.
+     - **KIỂM SOÁT & TỐI ƯU**: *Quét State*, *Sức khoẻ thư viện*, *Symbol / Footprint*, *Trùng thông số*, *Đề xuất thay thế*.
+     - **DỰ ÁN & SẢN XUẤT**: *Đối chiếu BOM*, *Tính giá BOM*, *Where-used*.
+     - **HỆ THỐNG**: *Thống kê*, *Liên hệ*.
+   - Hiệu ứng rê chuột (hover) mượt mà, thanh chỉ báo tab đang chọn (active indicator) và dot trạng thái.
+   - **Nút "+ Tạo thư viện mới..." nét đứt**: Đặt ngay ở chân Sidebar, giúp tạo file `Master_Library.xlsx` mới chuẩn cấu trúc bất cứ lúc nào.
+   - Dòng tóm tắt trạng thái thư viện ở đáy Sidebar.
+
+3. **Tối ưu co dãn Responsive cho toàn bộ các tab**:
+   - Không chỉ tab *Thêm linh kiện*, tất cả các tab khác (`Tra cứu thư viện`, `Sức khoẻ`, `Symbol/Footprint`, `Trùng thông số`, `Đề xuất thay thế`, `BOM`, `Kiểm tra quy tắc`, `Tính giá BOM`, `Where-used`, `Thống kê`) đều được tối ưu co dãn linh hoạt:
+     - Toàn bộ các thanh lọc, khung tìm kiếm mở rộng tự động theo chiều ngang (`grid weight=1`).
+     - Các nút tác vụ quan trọng (Quét, Xuất CSV, Tải datasheet...) được neo gọn gàng bên phải, không bị tràn hay cắt nút khi thay đổi kích thước cửa sổ.
+     - Bảng dữ liệu `Treeview` tự động co dãn các cột mô tả dài và cột cuối (`stretch=True`) lấp đầy toàn bộ không gian.
+     - Tab *Thống kê*: 5 thẻ chỉ số tóm tắt (Tổng linh kiện, Sheet, Tồn kho, Lỗi, Nhà SX) được phân bổ đều 100% bề ngang.
+
+4. **Cửa sổ Pop-up & Modal bo tròn Antigravity**:
+   - Tích hợp chuẩn Windows 11 DWM Rounded Corners (`DWMWA_WINDOW_CORNER_PREFERENCE = 33`), mang lại viền bo góc hiện đại cho cửa sổ chính và tất cả các cửa sổ con (Functions, Command Palette, Chọn hãng...).
+   - Bên trong pop-up thiết kế dạng thẻ card phẳng, màu nền tối giản đồng bộ.
+
+5. **Thiết kế màu sắc & Font chữ chuẩn Antigravity**:
+   - **Dark Mode**: Bảng màu đen sâu đồng nhất (`#101010`, card `#18181b`, border `#27272a`), không còn tình trạng loang lổ chỗ sáng chỗ tối.
+   - **Light Mode**: Bảng màu xám sáng thanh lịch (`#f4f4f5`, card `#ffffff`, border `#e4e4e7`).
+   - Sử dụng typography `Segoe UI` hiện đại, độ tương phản cao, chống mỏi mắt khi làm việc lâu dài.
 
 ## 4. Tool xử lý file của bạn thế nào
 

@@ -1,6 +1,6 @@
 # Altium DB Library Helper
 
-**Phiên bản 1.8.1** — Nhatnpm
+**Phiên bản 1.8.2** — Nhatnpm
 
 Tool chạy trên PC: nhập **part number** → chọn (hoặc để tool tự nhận diện) **loại linh kiện** → tra cứu Digi-Key / Mouser → điền đúng các trường của sheet tương ứng → ghi vào file Excel dùng làm database của Altium.
 
@@ -1201,3 +1201,14 @@ state_log.db        1.6 - nhật ký State (tự sinh)
 ```
 
 ---
+
+## Lịch sử phiên bản
+
+Phiên bản hiện tại: **1.8.2** (phát hành 2026-09-12).
+
+- **Dò tìm đa sàn cho toàn bộ linh kiện trong BOM:** Tự động truy vấn tất cả các sàn được kích hoạt (Digi-Key, Mouser, LCSC) cho mọi mã linh kiện trong BOM, thu thập đầy đủ giá, tồn kho, MOQ, lead time vào trường `all_sources`.
+- **Ngăn kéo chọn sàn dạng bảng Digi-Key nhúng trực tiếp (`SourcePickerDrawer`):** Thay thế popup rời rạc bằng ngăn kéo nhúng trực tiếp ngay dưới dòng tương ứng trong Treeview theo phong cách Digi-Key. Nhấp đúp 2 lần vào ô bất kỳ (trừ buffer và pn) để bật/tắt ngăn kéo và chọn sàn tức thì.
+- **Sửa triệt để lỗi In-Stock khi tồn kho bằng 0 (khắc phục ca `FX30B-5P-3.81DSA30`):** Đảm bảo số lượng tồn kho luôn phản ánh chuẩn xác 100% theo sàn đang chọn (Digi-Key = 0, Mouser = 12), không bị sàn khác đè mất.
+- **Bảo lưu lựa chọn thủ công khi tra cứu lại:** Tự động ghi nhớ sàn đã chọn thủ công (`chosen_source`) và hệ số dự phòng riêng (`custom_buffer`) khi bấm nút "Tra cứu giá".
+
+👉 **Xem toàn bộ lịch sử chi tiết tất cả các phiên bản từ 1.0.0 đến 1.8.2 tại:** [**CHANGELOG.md**](CHANGELOG.md)

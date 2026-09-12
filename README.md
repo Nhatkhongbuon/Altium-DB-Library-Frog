@@ -1,10 +1,10 @@
 # Altium DB Library Helper
 
-**Phiên bản 1.8.0** — Nhatnpm
+**Phiên bản 1.8.1** — Nhatnpm
 
 Tool chạy trên PC: nhập **part number** → chọn (hoặc để tool tự nhận diện) **loại linh kiện** → tra cứu Digi-Key / Mouser → điền đúng các trường của sheet tương ứng → ghi vào file Excel dùng làm database của Altium.
 
-Từ **1.8.0**, giao diện được **tái cấu trúc toàn diện theo phong cách GitToolPCB** (thiết kế 3 tầng hiện đại, bảng màu Tailwind Zinc, Sidebar phân nhóm chuẩn UX, Command Palette `Ctrl+K`, thông báo nổi Toast Notification, hệ thống phím tắt tiện lợi). Xem mục **3o**.
+Từ **1.8.0**, giao diện được **tái cấu trúc toàn diện theo phong cách GitToolPCB** (thiết kế 3 tầng hiện đại, bảng màu Tailwind Zinc, Sidebar phân nhóm chuẩn UX, thông báo nổi Toast Notification, hệ thống phím tắt tiện lợi). Xem mục **3o**.
 
 Từ **1.7.3** tool đọc và ghi được **hai kiểu file database** — tự nhận diện khi mở file, và chuyển đổi qua lại được:
 
@@ -20,6 +20,8 @@ Từ **1.7.5**: kéo thả đổi kích thước cửa sổ **mượt hẳn**, n
 Từ **1.7.6**: ô **Repo GitHub** trong Cấu hình bị **ẩn sau mật khẩu** — xem mục **3i**.
 
 Từ **1.7.8**: sửa lỗi *Security validation failure* khi tool tự mở lại sau cập nhật — xem mục **3n**.
+
+Từ **1.8.1**: thêm **nguồn thứ ba LCSC / JLCPCB** (không cần API key), và tab **Giá BOM** được làm lại: chọn sàn lấy giá bằng ô tick với thứ tự ưu tiên Digi-Key → Mouser → LCSC, thêm ô **hệ số dự phòng**, 16 cột có Manufacturer / Active / Trạng thái / Sàn, bảng tự co giãn theo cửa sổ, và **xuất ra Excel giữ nguyên công thức** — đổi số board ngay trong file là cả bảng tự tính lại.
 
 ---
 
